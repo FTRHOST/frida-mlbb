@@ -1,0 +1,21 @@
+{
+  "name": "frida-mlbb",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "wait-and-hook": "while [ -z $(adb shell ps -A | grep ':UnityKillsMe' | awk '{print $2}') ]; do sleep 1; done; PID=$(adb shell ps -A | grep ':UnityKillsMe' | awk '{print $2}'); echo 'PID Found: ' $PID; frida -U -p $PID -l dist/agent.js",
+    "watch": "frida-compile src/index.ts -o dist/agent.js -w",
+    "build": "mkdir -p dist && frida-compile src/index.ts -o dist/agent.js -c"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/frida-gum": "^19.1.0",
+    "@types/node": "^25.6.2",
+    "frida-compile": "^19.0.5",
+    "frida-il2cpp-bridge": "^0.13.1",
+    "typescript": "^6.0.3"
+  }
+}
