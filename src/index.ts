@@ -26,14 +26,20 @@ Il2Cpp.perform(() => {
   // ==========================================
   // GLOBAL BYPASS (Unlocking Features)
   // ==========================================
-  // Memaksa berbagai pengecekan ketersediaan skin agar selalu 'true' (tersedia)
-  // Toolkit.hookMethodReturn("SystemData", "CheckMapSkinAvailable", true);
-  // Toolkit.hookMethodReturn("GameInit", "IsSandBoxIp", true);
-  // Toolkit.hookMethodReturn("SystemData", "IsCanUseSkin", true);
-  // Toolkit.hookMethodReturn("UIChooseHero", "CanSelectSkin", true);
-  // Toolkit.hookMethodReturn("ChooseHeroMgr", "IsSkinUseable", true);
-  // Toolkit.hookMethodReturn("ChooseHeroMgr", "BActFreeSkin", true);
-  // Toolkit.hookMethodReturn("BattleBridge", "IsUIMiniMapToolButtonValid", true);
+  // MENGAPA: Kita ingin memaksa game agar selalu menganggap pemain memiliki akses ke semua skin.
+  // APA: Membajak berbagai pengecekan ketersediaan skin agar selalu bernilai 'true' (tersedia).
+  // CATATAN PENTING UNTUK PEMULA: Beberapa game memiliki tingkat pengecekan ganda. Oleh karena itu kita mem-bypass banyak fungsi sekaligus.
+
+  // PENTING: Untuk unlock skin atau unreleased skin, kita menggunakan argumen angka '2' sebagai return value.
+  // Mengapa 2? Berdasarkan eksperimen, nilai 2 mewakili state "Tersedia secara bebas / Unreleased" di sistem game ini.
+
+  Toolkit.hookMethodReturn("SystemData", "CheckMapSkinAvailable", 2);
+  Toolkit.hookMethodReturn("GameInit", "IsSandBoxIp", true); // Membuka akses server sandbox
+  Toolkit.hookMethodReturn("SystemData", "IsCanUseSkin", 2);
+  Toolkit.hookMethodReturn("UIChooseHero", "CanSelectSkin", 2);
+  Toolkit.hookMethodReturn("ChooseHeroMgr", "IsSkinUseable", 2);
+  Toolkit.hookMethodReturn("ChooseHeroMgr", "BActFreeSkin", 2);
+  Toolkit.hookMethodReturn("BattleBridge", "IsUIMiniMapToolButtonValid", true);
 
 
   // Toolkit.blockMethod("MTTDProto.CmdActivityData", "visit");
@@ -47,9 +53,10 @@ Il2Cpp.perform(() => {
   // ==========================================
   // FORBIDDEN SKINS MONITORING SYSTEM
   // ==========================================
+  // MENGAPA: Sistem ini memantau skin apa saja yang dibanned oleh server, berguna agar akun kita aman.
 
   // Daftar ID Skin yang didapat dari forbidden_skins_dump.json
-  const targetedSkinIds = new Set([
+  const kumpulanIdSkinYangDitarget = new Set([
     1435, 1437, 100712, 105212, 108412, 610751, 611941, 612542, 613261, 614241,
     614331, 614381, 614382, 615081, 616961, 616962, 617071, 617072, 618591,
     618731, 619331, 619861, 619862, 620251, 620252, 620861, 620862, 622651,
@@ -58,14 +65,14 @@ Il2Cpp.perform(() => {
   ]);
 
   // Map untuk menyimpan status dilarang (true) atau tidak (false)
-  const forbiddenSkinsMap = new Map<number, boolean>();
+  const statusSkinDilarang = new Map<number, boolean>();
 
   /**
    * Fungsi untuk menyimpan daftar skin yang terdeteksi dilarang ke JSON secara berkala
    */
   const saveForbiddenSkins = () => {
     try {
-      const forbiddenSkins = Array.from(forbiddenSkinsMap.entries())
+      const forbiddenSkins = Array.from(statusSkinDilarang.entries())
         .filter(([_, isForbidden]) => isForbidden)
         .map(([id, _]) => id)
         .sort((a, b) => a - b);
@@ -90,7 +97,7 @@ Il2Cpp.perform(() => {
 
   /**
    * Fungsi untuk mentrace semua method dalam sebuah class yang menerima argument
-   * yang nilainya ada dalam daftar targetedSkinIds.
+   * yang nilainya ada dalam daftar kumpulanIdSkinYangDitarget.
    * Return true jika class ditemukan, false jika tidak.
    */
   const traceClassForSkinIds = (className: string): boolean => {
@@ -107,7 +114,7 @@ Il2Cpp.perform(() => {
           // Logika pengecekan Skin ID
           for (let i = 0; i < args.length; i++) {
             const argVal = Number(args[i]);
-            if (targetedSkinIds.has(argVal)) {
+            if (kumpulanIdSkinYangDitarget.has(argVal)) {
               // TRACE LOG (Commented as requested)
               // console.log(`[🎯 ID TRACE] ${className}::${method.name}(arg[${i}]: ${argVal}) called!`);
             }
@@ -125,71 +132,10 @@ Il2Cpp.perform(() => {
     return true;
   };
 
-  // Aktifkan trace untuk SystemData
+  // MENGAPA: Mematikan pelacakan skin ID secara default karena memakan sumber daya (CPU) yang besar.
+  // Jika kamu butuh melacak ID skin tertentu untuk debugging, hapus komentar di bawah:
   // traceClassForSkinIds("SystemData");
 
-  // Aktifkan trace untuk MTTDProto.CmdActivityData atau CmdActivityData
-  /*if (!traceClassForSkinIds("MTTDProto.CmdActivityData")) {
-    traceClassForSkinIds("CmdActivityData");
-  }*/
-  /*
-    const SystemData = Toolkit.findClass("SystemData");
-    if (SystemData) {
-      // --- LOGIKA KHUSUS UNTUK ISFORBIDSKIN ---
-      const isForbidSkin = SystemData.methods.find(m =>
-        m.name === "IsForbidSkin" &&
-        m.parameterCount === 2 &&
-        m.parameters[0]?.type.name.includes("UInt32")
-      );
-  
-      if (isForbidSkin) {
-        console.log("[+] Hooking IsForbidSkin for data collection...");
-        isForbidSkin.implementation = function (skinId: any, filterLua: any) {
-          const result = isForbidSkin.invoke(skinId, filterLua);
-          const id = Number(skinId);
-          const isForbidden = (result === true || result === 1);
-  
-          // Jika status dilarang berubah, catat dan simpan
-          if (forbiddenSkinsMap.get(id) !== isForbidden) {
-            // TRACE LOG (Commented as requested)
-            // if (isForbidden) console.log(`[!] NEW FORBIDDEN SKIN DETECTED: ${id}`);
-            forbiddenSkinsMap.set(id, isForbidden);
-          }
-  
-          return result;
-        };
-      }
-  
-      // --- LOGIKA KHUSUS UNTUK MENAMBAH SKIN DILARANG ---
-      const addForbidSkin = SystemData.methods.find(m => m.name === "AddForbidSkinByID");
-      if (addForbidSkin) {
-        addForbidSkin.implementation = function (skinId: any) {
-          const id = Number(skinId);
-          // TRACE LOG (Commented as requested)
-          // console.log(`[Trace] AddForbidSkinByID(id: ${id})`);
-          forbiddenSkinsMap.set(id, true);
-          return addForbidSkin.invoke(skinId);
-        };
-      }
-  
-      const addAndCheck = SystemData.methods.find(m => m.name === "AddAndCheckForbidSkins");
-      if (addAndCheck) {
-        addAndCheck.implementation = function (skinIds: any) {
-          // TRACE LOG (Commented as requested)
-          // console.log(`[Trace] AddAndCheckForbidSkins called.`);
-          try {
-            const list = skinIds as Il2Cpp.Object;
-            const count = Number(list.method("get_Count").invoke());
-            for (let i = 0; i < count; i++) {
-              const id = Number(list.method("get_Item").invoke(i));
-              forbiddenSkinsMap.set(id, true);
-            }
-          } catch (e) { }
-          return addAndCheck.invoke(skinIds);
-        };
-      }
-    }
-  */
 
 
   // ==========================================
@@ -484,23 +430,23 @@ Il2Cpp.perform(() => {
   // ==========================================
   // ACTIVITY DATA COLLECTION (Dynamic)
   // ==========================================
-  const dynamicActivitiesMap = new Map<string, any>();
-  const dynamicUniqueTypes = new Set<number>();
+  const daftarAktivitasSementara = new Map<string, any>(); // Menyimpan data aktivitas yang didapat dari server
+  const tipeAktivitasUnik = new Set<number>(); // Menyimpan ID unik untuk setiap tipe aktivitas
 
   /**
    * Fungsi untuk menyimpan hasil dump dinamis ke JSON
    */
   const saveDynamicDump = () => {
     try {
-      if (dynamicActivitiesMap.size === 0) return;
+      if (daftarAktivitasSementara.size === 0) return;
 
       const dataPath = Il2Cpp.application.dataPath;
       if (!dataPath) return;
 
-      const activities = Array.from(dynamicActivitiesMap.values())
+      const activities = Array.from(daftarAktivitasSementara.values())
         .sort((a, b) => Number(a.id) - Number(b.id));
 
-      const types = Array.from(dynamicUniqueTypes).sort((a, b) => a - b);
+      const types = Array.from(tipeAktivitasUnik).sort((a, b) => a - b);
 
       // 1. Simpan Dynamic Activity Dump
       const activityJson = JSON.stringify(activities, null, 2);
@@ -548,9 +494,9 @@ Il2Cpp.perform(() => {
           const rawTitle = instance.field("sTitle").value;
           const idStr = rawId.toString();
 
-          if (!dynamicActivitiesMap.has(idStr)) {
-            dynamicUniqueTypes.add(rawType);
-            dynamicActivitiesMap.set(idStr, {
+          if (!daftarAktivitasSementara.has(idStr)) {
+            tipeAktivitasUnik.add(rawType);
+            daftarAktivitasSementara.set(idStr, {
               id: rawId,
               type: rawType,
               title: rawTitle instanceof Il2Cpp.String ? rawTitle.content : null,
@@ -675,9 +621,10 @@ Il2Cpp.perform(() => {
     return original();
   });
 
+  // Fungsi ini dipanggil ketika ada chat masuk yang mengandung awalan '#'
   const handleCommand = (command: string, bridgeInstance: Il2Cpp.Object) => {
-    const cmd = command.toLowerCase();
-    const now = Date.now();
+    const cmd = command.toLowerCase(); // Ubah perintah menjadi huruf kecil semua agar tidak sensitif huruf besar/kecil
+    const now = Date.now(); // Dapatkan waktu saat ini
 
     if (cmd === "menu") {
       // Debounce menu to once every 5 seconds to prevent history-reprocessing spam
@@ -716,8 +663,10 @@ Il2Cpp.perform(() => {
   let isProcessingCommand = false;
   let lastProcessedCmdString = "";
 
+  // Mencari kelas 'BattleBridge' (Tempat dimana logika antarmuka pertempuran berada)
   const BattleBridgeClass = Toolkit.findClass("BattleBridge");
   if (BattleBridgeClass) {
+    // Mencari fungsi yang bertugas menampilkan text history chat
     const showChat = BattleBridgeClass.method("ShowChatHistoryText");
     if (showChat) {
       console.log("[+] Hooking ShowChatHistoryText for commands...");
@@ -765,22 +714,30 @@ Il2Cpp.perform(() => {
     }
   }
 
-  // Hook for No CD
+  // ==========================================
+  // FITUR TANPA WAKTU JEDA (NO COOLDOWN MOD)
+  // ==========================================
+  // Mencari kelas komponen cooldown di dalam game
   const CoolDownCompClass = Toolkit.findClass("Battle.CoolDownComp");
   if (CoolDownCompClass) {
+    // Cari fungsi yang mengecek apakah skill sedang cooldown
     const isCoolDown = CoolDownCompClass.method("IsCoolDown", 1);
     if (isCoolDown) {
       console.log("[+] Hooking CoolDownComp::IsCoolDown for NoCD mod...");
+      // Bajak fungsinya
       isCoolDown.implementation = function (spellId: Il2Cpp.Parameter.Type) {
         if (ModState.noCD) {
           try {
+            // Cek apakah pemilik skill adalah entitas utama (pemain kita)
             const owner = (this as Il2Cpp.Object).method("get_m_Owner").invoke() as Il2Cpp.Object;
             if (owner && !owner.handle.isNull()) {
               const isMain = owner.method("get_bIsMainEntity").invoke();
+              // Jika ya, paksa game mengira tidak ada cooldown (return false)
               if (isMain) return false;
             }
-          } catch (e) { }
+          } catch (e) { } // Abaikan error agar game tidak crash
         }
+        // Jika mod mati, jalankan seperti biasa
         return isCoolDown.invoke(this as any, spellId);
       };
     }
