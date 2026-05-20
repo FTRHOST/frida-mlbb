@@ -1,8 +1,13 @@
 import "frida-il2cpp-bridge";
 
 export interface IToolkit {
+  /** Membajak nilai kembali (return value) suatu metode */
   hookMethodReturn(className: string, methodName: string, forceReturn: any): void;
+
+  /** Memblokir jalannya suatu metode agar tidak pernah dipanggil */
   blockMethod(className: string, methodName: string): void;
+
+  /** Melacak semua panggilan yang masuk ke metode ini, sangat berguna untuk mencari celah/bug */
   traceMethodCalls(className: string): void;
   patchObject(instance: Il2Cpp.Object, patch: Record<string, any>, debug?: boolean): void;
   inspect(target: string | Il2Cpp.Object, returnString?: boolean): string | void;
@@ -103,6 +108,14 @@ export const Toolkit: IToolkit = {
    * Universal Interceptor: Hook any method and provide a callback to handle the logic.
    * @param callback Function receiving (instance, args, originalFunction)
    */
+    /**
+   * MENGAPA: Jika kita ingin mengetahui kapan suatu fungsi dipanggil, melihat apa argumennya, atau mengubah logika kerjanya sepenuhnya.
+   * APA: Mencegat (intercept) eksekusi fungsi, memungkinkan kita menjalankan kode sebelum/sesudah fungsi asli berjalan.
+   *
+   * @param className Nama kelas target.
+   * @param methodName Nama fungsi target.
+   * @param callback Fungsi milik kita yang akan dipanggil alih-alih fungsi asli gamenya.
+   */
   intercept(className: string, methodName: string, callback: (instance: any, args: any[], original: (...newArgs: any[]) => any) => any) {
     try {
       const klass = this.findClass(className);
@@ -202,6 +215,14 @@ export const Toolkit: IToolkit = {
 
   /**
    * Force a method to always return a specific value across all assemblies.
+   */
+    /**
+   * MENGAPA: Kadang kita hanya ingin mengubah hasil akhir (jawaban) dari sebuah fungsi game tanpa mempedulikan proses di dalamnya.
+   * APA: Membajak fungsi agar selalu mengembalikan nilai tertentu (forceReturn).
+   *
+   * @param className Nama kelas tempat fungsi berada (misal: "SystemData")
+   * @param methodName Nama fungsi yang ingin dibajak (misal: "IsCanUseSkin")
+   * @param forceReturn Nilai jawaban paksa (misal: true, false, atau angka 2)
    */
   hookMethodReturn(className: string, methodName: string, forceReturn: any) {
     try {
