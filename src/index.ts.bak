@@ -1,0 +1,162 @@
+import "frida-il2cpp-bridge";
+
+Il2Cpp.$config.moduleName = "liblogic.so";
+
+Il2Cpp.perform(() => {
+  console.log("Mantab")
+
+  // Domain
+  const assembly = Il2Cpp.domain.assembly("Assembly-CSharp");
+
+  const asm = assembly.image;
+
+  // Class
+  const chs = asm.class("MTTDProto.CmdHeroSkin");
+
+  const sd = asm.class("SystemData");
+
+  const urh = asm.class("UIRankHero");
+
+  const smd = asm.class("StarMemberData");
+
+  const gsc = asm.class("GameServerConfig");
+
+  const udu = asm.class("UIDataUtil");
+
+  const chm = asm.class("ChooseHeroMgr");
+
+  const cshow = asm.class("UIRankHero/ChangeShow");
+
+  const uch = asm.class("UIChooseHero");
+
+  // Method
+  // ===SystemData
+  const ghs = sd.method("GetHeroSkin");
+  const ihs = sd.method("IsHaveSkin");
+  const ihsf = sd.method("IsHaveSkinForever");
+  const icus = sd.method("IsCanUseSkin");
+  const glsbf = sd.method("GetLeaderSkinBForbid");
+  const crus = sd.method("CheckReputationUnlockSkin");
+  const gssr = sd.method("GetStarSkinRank");
+
+  //===UIRankHero
+  const brhcu = urh.method("BRankHeroCanUse");
+
+  //===StarMemberData
+  const cs = smd.method("ContainSkin");
+
+  //===GameServerConfig
+  const sendData = gsc.method("SendData");
+
+  //===UIDataUtil
+  const ihis = udu.method("IsHeroInShop");
+
+  //===ChooseHeroMgr
+  const sshsi = chm.method("SaveSelectHeroSkinId");
+
+  //===ChangeShow
+  const sus = cshow.method("SendUseSkin");
+
+  //===UIChooseHero
+  const bss = uch.method("BatttleSelectSkin");
+
+
+
+
+  //implementation
+
+  ghs.implementation = function (m_heroskins: any, skinid: any) {
+
+    const skinPalsu = chs.new();
+
+    skinPalsu.field("iId").value = skinid;
+    skinPalsu.field("iLimitTime").value = 0;
+    skinPalsu.field("iSource").value = 0;
+
+    return skinPalsu;
+  };
+
+  ihs.implementation = function (skinid: any) {
+
+    const skinPalsuHave = chs.new();
+
+    skinPalsuHave.field("iId").value = skinid;
+    skinPalsuHave.field("iLimitTime").value = 0;
+    skinPalsuHave.field("iSource").value = 0;
+
+    return skinPalsuHave;
+  };
+
+  ihsf.implementation = function (skinid: any) {
+
+    const skinPalsuHaveF = chs.new();
+
+    skinPalsuHaveF.field("iId").value = skinid;
+    skinPalsuHaveF.field("iLimitTime").value = 0;
+    skinPalsuHaveF.field("iSource").value = 0;
+
+    return skinPalsuHaveF;
+  };
+
+  icus.implementation = function (skinid) {
+    return true;
+  };
+
+  // bikin blank
+  /*
+  glsbf.implementation = function (skinid) {
+    return true;
+  }; */
+
+  brhcu.implementation = function (heroid) {
+    return true;
+  };
+
+  cs.implementation = function (skinId) {
+    return false;
+  };
+
+  crus.implementation = function (skinId) {
+    return true;
+  };
+
+  sendData.implementation = function (uiMsgID, sdpMsg, eSocketType, packReliType, bNeedLockRequestIndex, cryptoType) {
+    return true;
+  };
+
+  /*gssr.implementation = function (skinId) {
+    return true;
+  };*/
+
+  ihis.implementation = function (heroId) {
+    return true;
+  };
+
+
+
+
+
+
+
+  sus.implementation = function (skinId: any, bForce) {
+    const orig = this.method("SendUseSkin").invoke(skinId, bForce);
+    console.log("SuS", skinId, bForce);
+    return orig;
+  };
+
+  sshsi.implementation = function (heroid, skinid) {
+    const ori = this.method("SaveSelectHeroSkinId").invoke(heroid, skinid);
+    console.log("sshsi", heroid, skinid);
+
+    return ori;
+  }
+
+
+
+
+
+
+
+
+
+});

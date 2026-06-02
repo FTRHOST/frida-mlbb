@@ -11,7 +11,6 @@ Il2Cpp.perform(() => {
     // Inisialisasi Kelas
     const SystemData = AssemblyCSharp.class("SystemData");
     const CmdHeroSkin = AssemblyCSharp.class("MTTDProto.CmdHeroSkin");
-    const CmdHeroStatue = AssemblyCSharp.class("MTTDProto.CmdHeroStatue");
     const ChooseHeroMgr = AssemblyCSharp.class("ChooseHeroMgr");
     const UIChooseHero = AssemblyCSharp.class("UIChooseHero");
     const BattleReceiveMessage = AssemblyCSharp.class("BattleReceiveMessage");
@@ -20,7 +19,6 @@ Il2Cpp.perform(() => {
     // Variabel Global
     let m_HeroID: number = 0;
     let m_SkinID: number = 0;
-    let m_StatueID: number = 0;
 
     const getUiID = (): string => {
       try {
@@ -48,8 +46,6 @@ Il2Cpp.perform(() => {
       const instance = CmdHeroSkin.alloc();
       instance.method(".ctor").invoke();
       instance.field("iId").value = skinid as any;
-      instance.field("iLimitTime").value = 0;
-      instance.field("iSource").value = 0;
       return instance;
     };
 
@@ -59,56 +55,10 @@ Il2Cpp.perform(() => {
       const instance = CmdHeroSkin.alloc();
       instance.method(".ctor").invoke();
       instance.field("iId").value = skinid as any;
-      instance.field("iLimitTime").value = 0;
-      instance.field("iSource").value = 0;
-      return instance;
-    };
-
-    SystemData.method("IsHaveSkinForever").implementation = function (skinid: any): any {
-      const ret = this.method("IsHaveSkinForever").invoke(skinid) as Il2Cpp.Object;
-      if (!ret.handle.isNull() && ret.handle.toInt32() > 0x100) return ret;
-      const instance = CmdHeroSkin.alloc();
-      instance.method(".ctor").invoke();
-      instance.field("iId").value = skinid as any;
-      instance.field("iLimitTime").value = 0;
-      instance.field("iSource").value = 0;
       return instance;
     };
 
     SystemData.method("IsCanUseSkin").implementation = function (): any { return true; };
-
-    SystemData.method("IsHaveStatue").implementation = function (statueid: any): any {
-      const ret = this.method("IsHaveStatue").invoke(statueid) as Il2Cpp.Object;
-      if (!ret.handle.isNull() && ret.handle.toInt32() > 0x100) return ret;
-      const instance = CmdHeroStatue.alloc();
-      instance.method(".ctor").invoke();
-      instance.field("iId").value = statueid as any;
-      instance.field("iLimitTime").value = 0;
-      instance.field("iSource").value = 0;
-      return instance;
-    };
-
-    SystemData.method("IsHaveStatueForever").implementation = function (statueid: any): any {
-      const ret = this.method("IsHaveStatueForever").invoke(statueid) as Il2Cpp.Object;
-      if (!ret.handle.isNull() && ret.handle.toInt32() > 0x100) return ret;
-      const instance = CmdHeroStatue.alloc();
-      instance.method(".ctor").invoke();
-      instance.field("iId").value = statueid as any;
-      instance.field("iLimitTime").value = 0;
-      instance.field("iSource").value = 0;
-      return instance;
-    };
-
-    SystemData.method("GetHeroHolyStatue").implementation = function (m_herostatues: any, statueid: any): any {
-      const ret = this.method("GetHeroHolyStatue").invoke(m_herostatues, statueid) as Il2Cpp.Object;
-      if (!ret.handle.isNull() && ret.handle.toInt32() > 0x100) return ret;
-      const instance = CmdHeroStatue.alloc();
-      instance.method(".ctor").invoke();
-      instance.field("iId").value = statueid as any;
-      instance.field("iLimitTime").value = 0;
-      instance.field("iSource").value = 0;
-      return instance;
-    };
 
     // ==========================================
     // 2. SERVER SPOOFING (Capture ID)
@@ -130,21 +80,6 @@ Il2Cpp.perform(() => {
       }
     });
 
-    const sshs = ChooseHeroMgr.method("SendSelectHolyStatue");
-    Interceptor.attach(sshs.virtualAddress, {
-      onEnter(args) {
-        if (args && args[1] && args[2]) {
-          const statueid = args[1].toInt32();
-          const heroid = args[2].toInt32();
-          if (statueid > 0) {
-            m_StatueID = statueid;
-            console.log(`[Lobby] Memilih Statue: ${statueid}`);
-          }
-          args[1] = ptr(0);
-        }
-      }
-    });
-
     // ==========================================
     // 3. UI FORCING
     // ==========================================
@@ -154,22 +89,6 @@ Il2Cpp.perform(() => {
     };
 
     UIChooseHero.method("BatttleSelectSkin").implementation = function (uid: any, skinid: any): any {
-      const myUiId = getUiID();
-      if (uid.toString() === myUiId && m_SkinID > 0) {
-        return this.method("BatttleSelectSkin").invoke(uid, m_SkinID);
-      }
-      return this.method("BatttleSelectSkin").invoke(uid, skinid);
-    };
-
-    UIChooseHero.method("OnEventBatttleSelectHolyStatue").implementation = function (uid: any, statueId: any): any {
-      const myUiId = getUiID();
-      if (uid.toString() === myUiId && m_StatueID > 0) {
-        return this.method("OnEventBatttleSelectHolyStatue").invoke(uid, m_StatueID);
-      }
-      return this.method("OnEventBatttleSelectHolyStatue").invoke(uid, statueId);
-    };
-
-    UIRankHero.method("BatttleSelectSkin").implementation = function (uid: any, skinid: any): any {
       const myUiId = getUiID();
       if (uid.toString() === myUiId && m_SkinID > 0) {
         return this.method("BatttleSelectSkin").invoke(uid, m_SkinID);
@@ -199,11 +118,6 @@ Il2Cpp.perform(() => {
             info.field("uiSkinId").value = m_SkinID;
             try { info.field("uiHeroSkinIDChoose").value = m_SkinID; } catch (e) { }
             console.log(`[BattleInject] Berhasil menyuntik Skin ${m_SkinID} ke UID ${lUid}`);
-          }
-
-          if (lUid === myUiId && m_StatueID !== 0) {
-            info.field("uiHolyStatue").value = m_StatueID;
-            console.log(`[BattleInject] Berhasil menyuntik Statue ${m_StatueID} ke UID ${lUid}`);
           }
         } catch (e) { }
       }
