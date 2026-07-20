@@ -1,5 +1,5 @@
 📦
-132334 /src/index.js
+132110 /src/index.js
 ✄
 // node_modules/frida-il2cpp-bridge/dist/index.js
 var __decorate = function(decorators, target, key, desc) {
@@ -3345,192 +3345,184 @@ var Il2Cpp2;
 })(Il2Cpp2 || (Il2Cpp2 = {}));
 globalThis.Il2Cpp = Il2Cpp2;
 
-// src/index.ts
+// src/tool-leak.ts
 Il2Cpp.$config.moduleName = "liblogic.so";
 Il2Cpp.perform(() => {
-  console.log("[*] IL2CPP tersambung. Menginisialisasi Spoofing V8 (Final Stable)...");
-  try {
-    const AssemblyCSharp = Il2Cpp.domain.assembly("Assembly-CSharp").image;
-    const SystemData = AssemblyCSharp.class("SystemData");
-    const CmdHeroSkin = AssemblyCSharp.class("MTTDProto.CmdHeroSkin");
-    const CmdHeroStatue = AssemblyCSharp.class("MTTDProto.CmdHeroStatue");
-    const ChooseHeroMgr = AssemblyCSharp.class("ChooseHeroMgr");
-    const UIChooseHero = AssemblyCSharp.class("UIChooseHero");
-    const BattleReceiveMessage = AssemblyCSharp.class("BattleReceiveMessage");
-    const UIRankHero = AssemblyCSharp.class("UIRankHero");
-    let m_HeroID = 0;
-    let m_SkinID = 0;
-    let m_StatueID = 0;
-    const getUiID = () => {
-      try {
-        const val = SystemData.field("m_uiID").value;
-        if (val !== null && val !== void 0)
-          return val.toString();
-      } catch (e) {
-        try {
-          const instances = Il2Cpp.gc.choose(SystemData);
-          if (instances && instances.length > 0 && instances[0]) {
-            const iVal = instances[0].field("m_uiID").value;
-            if (iVal !== null && iVal !== void 0)
-              return iVal.toString();
-          }
-        } catch (e2) {
-        }
-      }
-      return "0";
-    };
-    SystemData.method("GetHeroSkin").implementation = function(m_heroskins, skinid) {
-      const ret = this.method("GetHeroSkin").invoke(m_heroskins, skinid);
-      if (!ret.handle.isNull() && ret.handle.toInt32() > 256)
-        return ret;
-      const instance = CmdHeroSkin.alloc();
-      instance.method(".ctor").invoke();
-      instance.field("iId").value = skinid;
-      instance.field("iLimitTime").value = 0;
-      instance.field("iSource").value = 0;
-      return instance;
-    };
-    SystemData.method("IsHaveSkin").implementation = function(skinid) {
-      const ret = this.method("IsHaveSkin").invoke(skinid);
-      if (!ret.handle.isNull() && ret.handle.toInt32() > 256)
-        return ret;
-      const instance = CmdHeroSkin.alloc();
-      instance.method(".ctor").invoke();
-      instance.field("iId").value = skinid;
-      instance.field("iLimitTime").value = 0;
-      instance.field("iSource").value = 0;
-      return instance;
-    };
-    SystemData.method("IsHaveSkinForever").implementation = function(skinid) {
-      const ret = this.method("IsHaveSkinForever").invoke(skinid);
-      if (!ret.handle.isNull() && ret.handle.toInt32() > 256)
-        return ret;
-      const instance = CmdHeroSkin.alloc();
-      instance.method(".ctor").invoke();
-      instance.field("iId").value = skinid;
-      instance.field("iLimitTime").value = 0;
-      instance.field("iSource").value = 0;
-      return instance;
-    };
-    SystemData.method("IsCanUseSkin").implementation = function() {
-      return true;
-    };
-    SystemData.method("IsHaveStatue").implementation = function(statueid) {
-      const ret = this.method("IsHaveStatue").invoke(statueid);
-      if (!ret.handle.isNull() && ret.handle.toInt32() > 256)
-        return ret;
-      const instance = CmdHeroStatue.alloc();
-      instance.method(".ctor").invoke();
-      instance.field("iId").value = statueid;
-      instance.field("iLimitTime").value = 0;
-      instance.field("iSource").value = 0;
-      return instance;
-    };
-    SystemData.method("IsHaveStatueForever").implementation = function(statueid) {
-      const ret = this.method("IsHaveStatueForever").invoke(statueid);
-      if (!ret.handle.isNull() && ret.handle.toInt32() > 256)
-        return ret;
-      const instance = CmdHeroStatue.alloc();
-      instance.method(".ctor").invoke();
-      instance.field("iId").value = statueid;
-      instance.field("iLimitTime").value = 0;
-      instance.field("iSource").value = 0;
-      return instance;
-    };
-    SystemData.method("GetHeroHolyStatue").implementation = function(m_herostatues, statueid) {
-      const ret = this.method("GetHeroHolyStatue").invoke(m_herostatues, statueid);
-      if (!ret.handle.isNull() && ret.handle.toInt32() > 256)
-        return ret;
-      const instance = CmdHeroStatue.alloc();
-      instance.method(".ctor").invoke();
-      instance.field("iId").value = statueid;
-      instance.field("iLimitTime").value = 0;
-      instance.field("iSource").value = 0;
-      return instance;
-    };
-    const sss = ChooseHeroMgr.method("SendSelectSkin");
-    Interceptor.attach(sss.virtualAddress, {
-      onEnter(args) {
-        if (args && args[1] && args[2]) {
-          const skinid = args[1].toInt32();
-          const heroid = args[2].toInt32();
-          if (skinid > 0) {
-            m_SkinID = skinid;
-            m_HeroID = heroid;
-            console.log(`[Lobby] Memilih Skin: ${skinid}`);
-          }
-          args[1] = ptr(0);
-        }
-      }
-    });
-    const sshs = ChooseHeroMgr.method("SendSelectHolyStatue");
-    Interceptor.attach(sshs.virtualAddress, {
-      onEnter(args) {
-        if (args && args[1] && args[2]) {
-          const statueid = args[1].toInt32();
-          const heroid = args[2].toInt32();
-          if (statueid > 0) {
-            m_StatueID = statueid;
-            console.log(`[Lobby] Memilih Statue: ${statueid}`);
-          }
-          args[1] = ptr(0);
-        }
-      }
-    });
-    UIRankHero.method("RefreshSkinDic").implementation = function(heroid, skinid, uid) {
-      return this.method("RefreshSkinDic").invoke(m_HeroID, m_SkinID, uid);
-    };
-    UIChooseHero.method("BatttleSelectSkin").implementation = function(uid, skinid) {
-      const myUiId = getUiID();
-      if (uid.toString() === myUiId && m_SkinID > 0) {
-        return this.method("BatttleSelectSkin").invoke(uid, m_SkinID);
-      }
-      return this.method("BatttleSelectSkin").invoke(uid, skinid);
-    };
-    UIChooseHero.method("OnEventBatttleSelectHolyStatue").implementation = function(uid, statueId) {
-      const myUiId = getUiID();
-      if (uid.toString() === myUiId && m_StatueID > 0) {
-        return this.method("OnEventBatttleSelectHolyStatue").invoke(uid, m_StatueID);
-      }
-      return this.method("OnEventBatttleSelectHolyStatue").invoke(uid, statueId);
-    };
-    UIRankHero.method("BatttleSelectSkin").implementation = function(uid, skinid) {
-      const myUiId = getUiID();
-      if (uid.toString() === myUiId && m_SkinID > 0) {
-        return this.method("BatttleSelectSkin").invoke(uid, m_SkinID);
-      }
-      return this.method("BatttleSelectSkin").invoke(uid, skinid);
-    };
-    const setPlayerData = BattleReceiveMessage.method("SetPlayerData").overload("MTTDProto.BattlePlayerInfo", "System.UInt32");
-    Interceptor.attach(setPlayerData.virtualAddress, {
-      onEnter(args) {
-        if (!args || !args[1])
-          return;
-        const playerInfoHandle = args[1];
-        if (playerInfoHandle.isNull() || playerInfoHandle.toInt32() < 4096)
-          return;
-        try {
-          const info = new Il2Cpp.Object(playerInfoHandle);
-          const lUid = info.field("lUid").value.toString();
-          const myUiId = getUiID();
-          if (lUid === myUiId && m_SkinID !== 0) {
-            info.field("uiSkinId").value = m_SkinID;
-            try {
-              info.field("uiHeroSkinIDChoose").value = m_SkinID;
-            } catch (e) {
-            }
-            console.log(`[BattleInject] Berhasil menyuntik Skin ${m_SkinID} ke UID ${lUid}`);
-          }
-          if (lUid === myUiId && m_StatueID !== 0) {
-            info.field("uiHolyStatue").value = m_StatueID;
-            console.log(`[BattleInject] Berhasil menyuntik Statue ${m_StatueID} ke UID ${lUid}`);
-          }
-        } catch (e) {
-        }
-      }
-    });
-    console.log("[+] Semua hook Spoofing V8 Berhasil Dipasang!");
-  } catch (e) {
-    console.log(`[!] Error Inisialisasi: ${e.message}`);
+  console.log("Oke Nyambung");
+  const asm = Il2Cpp.domain.assembly("Assembly-CSharp");
+  const sd = asm.image.class("SystemData");
+  const bb = asm.image.class("BattleBridge");
+  const mmtb = asm.image.class("UIMiniMapToolButton");
+  const chm = asm.image.class("ChooseHeroMgr");
+  const uch = asm.image.class("UIChooseHero");
+  const b_mtd = asm.image.class("Battle.MapTypeData");
+  const gms = asm.image.class("GameServerConfig");
+  const rd = asm.image.class("SystemData/RoomData");
+  const UIMiniMapToolButton = asm.image.class("UIMiniMapToolButton");
+  const sshsi = chm.method("SaveSelectHeroSkinId");
+  const brm = asm.image.class("MTTDProto.BattlePlayerInfo");
+  const LoginCLibraryUtils = asm.image.class("LoginCLibraryUtils");
+  const initialSandBox = LoginCLibraryUtils.field("mStaticIsSandBox").value;
+  console.log(`[LoginCLibraryUtils] Initial mStaticIsSandBox: ${initialSandBox}`);
+  LoginCLibraryUtils.field("mStaticIsSandBox").value = true;
+  const target = bb.method("SetMapRange");
+  Il2Cpp.trace(true).classes(UIMiniMapToolButton).and().attach();
+  sd.field("m_uiDamond").value = 982732;
+  sd.field("m_uiCoupons").value = 976473;
+  sd.field("m_bEsportPlayer").value = true;
+  const instanceGMS = Il2Cpp.gc.choose(gms);
+  const objekAktifGMS = instanceGMS.length > 0 ? instanceGMS[0] : null;
+  if (objekAktifGMS) {
+    const gsdksandbox = objekAktifGMS.field("m_bGSDKSandBox").value;
+    const adjustsandbox = objekAktifGMS.field("m_bAdjustSandBox").value;
+    console.log(`[GameServerConfig] Initial m_bGSDKSandBox: ${gsdksandbox}, m_bAdjustSandBox: ${adjustsandbox}`);
   }
+  gms.method("IsChannelTapTest").implementation = function() {
+    const ori = this.method("IsChannelTapTest").invoke();
+    const gsdksandbox = this.field("m_bGSDKSandBox").value;
+    const adjustsandbox = this.field("m_bAdjustSandBox").value;
+    console.log(`[GameServerConfig::IsChannelTapTest] Return: ${ori}, m_bGSDKSandBox: ${gsdksandbox}, m_bAdjustSandBox: ${adjustsandbox}`);
+    return ori;
+  };
+  console.log("Mencari objek");
+  const instanceBB = Il2Cpp.gc.choose(bb);
+  const objekAktifBB = instanceBB.length > 0 ? instanceBB[0] : null;
+  const instanceMMTB = Il2Cpp.gc.choose(mmtb);
+  const objekAktifMMTB = instanceMMTB.length > 0 ? instanceMMTB[0] : null;
+  const instanceUIMiniMapToolButton = Il2Cpp.gc.choose(UIMiniMapToolButton);
+  const objekAktifUIMiniMapToolButton = instanceUIMiniMapToolButton[0];
+  globalThis.showbar = function(bShow) {
+    if (!objekAktifBB) {
+      console.log("[!] Gagal: Masuk ke arena battle terlebih dahulu agar instance terisi!");
+      return;
+    }
+    console.log("[*] showbar: ", bShow);
+    objekAktifBB.method("HideHeroBlood").invoke(bShow);
+    objekAktifUIMiniMapToolButton.method("SetVisible").invoke(bShow);
+    objekAktifUIMiniMapToolButton.field("m_bGMButtonShown").value = false;
+  };
+  globalThis.hideui = function() {
+    if (!objekAktifBB) {
+      console.log("[!] Gagal: Masuk ke arena battle terlebih dahulu agar instance terisi!");
+      return;
+    }
+    console.log("[*] ToggleAllUIShow ditekan");
+    objekAktifBB.method("ToggleAllUIShow").invoke();
+  };
+  globalThis.minimaptoolbuttonshow = function(bShow) {
+    if (!objekAktifBB) {
+      console.log("[!] Gagal: Masuk ke arena battle terlebih dahulu agar instance terisi!");
+      return;
+    }
+    console.log("[*] Tampilkan mini map tool button: ", bShow);
+    objekAktifBB.method("SetMinimapToolButtonShow").invoke(bShow);
+  };
+  globalThis.showitem = function(bShow) {
+    if (!objekAktifBB) {
+      console.log("[!] Gagal: Masuk ke arena battle terlebih dahulu agar instance terisi!");
+      return;
+    }
+    console.log("[*] Tampilkan item shop direkomedasi: ", bShow);
+    objekAktifBB.method("SetRecEquipShow").invoke(bShow);
+  };
+  globalThis.showminimap = function(bShow) {
+    if (!objekAktifBB) {
+      console.log("[!] Gagal: Masuk ke arena battle terlebih dahulu agar instance terisi!");
+      return;
+    }
+    console.log("[*] Tampilkan minimap: ", bShow);
+    objekAktifBB.method("SetMiniMapShow").invoke(bShow);
+  };
+  globalThis.hidespell = function(bShow) {
+    if (!objekAktifBB) {
+      console.log("[!] Gagal: Masuk ke arena battle terlebih dahulu agar instance terisi!");
+      return;
+    }
+    console.log("[*] Sembunyikan spell: ", bShow);
+    objekAktifBB.method("SetExtraSkillShow").invoke(bShow);
+  };
+  globalThis.hidebuff = function(bShow) {
+    if (!objekAktifBB) {
+      console.log("[!] Gagal: Masuk ke arena battle terlebih dahulu agar instance terisi!");
+      return;
+    }
+    console.log("[*] Sembunyikan icon buff dsb.: ", bShow);
+    objekAktifBB.method("SetKeySkillExtraShow").invoke(bShow);
+  };
+  globalThis.hidename = function(bHide) {
+    if (!objekAktifBB) {
+      console.log("[!] Gagal: Masuk ke arena battle terlebih dahulu agar instance terisi!");
+      return;
+    }
+    console.log("[*] Sembunyikan nama: ", bHide);
+    objekAktifBB.method("HideHeroNameAndFly").invoke(bHide);
+  };
+  globalThis.showinfo = function(bShow) {
+    if (!objekAktifBB) {
+      console.log("[!] Gagal: Masuk ke arena battle terlebih dahulu agar instance terisi!");
+      return;
+    }
+    console.log("[*] Tampilkan item shop direkomedasi: ", bShow);
+    objekAktifBB.method("SetBattleInfoShow").invoke(bShow);
+  };
+  globalThis.freeskin = function(bool) {
+    if (bool) {
+      chm.method("BActFreeSkin").implementation = function(skinData) {
+        return true;
+      };
+    } else {
+      chm.method("BActFreeSkin").revert();
+    }
+  };
+  globalThis.test = function(bHide) {
+    if (!objekAktifBB) {
+      console.log("[!] Gagal: Masuk ke arena battle terlebih dahulu agar instance terisi!");
+      return;
+    }
+    console.log("[*] Tampilkan item shop direkomedasi: ", bHide);
+    objekAktifBB.method("SetJoyStickVisable").invoke(bHide);
+  };
+  globalThis.test0 = function() {
+    if (!objekAktifMMTB) {
+      console.log("[!] Gagal: Masuk ke arena battle terlebih dahulu agar instance terisi!");
+      return;
+    }
+    console.log("[*] Tampilkan item shop direkomedasi: ");
+    objekAktifMMTB.method("OnGmOpenSetting").invoke();
+  };
+  globalThis.liatsandbox = function() {
+    const staticSandBox = LoginCLibraryUtils.field("mStaticIsSandBox").value;
+    console.log(`[LoginCLibraryUtils] mStaticIsSandBox: ${staticSandBox}`);
+    try {
+      const instance = gms.field("Instance").value;
+      if (!instance.isNull()) {
+        const gsdksandbox = instance.field("m_bGSDKSandBox").value;
+        const adjustsandbox = instance.field("m_bAdjustSandBox").value;
+        console.log(`[GameServerConfig.Instance] m_bGSDKSandBox: ${gsdksandbox}, m_bAdjustSandBox: ${adjustsandbox}`);
+        return;
+      }
+    } catch (e) {
+    }
+    try {
+      const chooseGMS = Il2Cpp.gc.choose(gms);
+      if (chooseGMS.length > 0) {
+        const obj = chooseGMS[0];
+        const gsdksandbox = obj.field("m_bGSDKSandBox").value;
+        const adjustsandbox = obj.field("m_bAdjustSandBox").value;
+        console.log(`[GC Choose] m_bGSDKSandBox: ${gsdksandbox}, m_bAdjustSandBox: ${adjustsandbox}`);
+      } else {
+        console.log("[!] No GameServerConfig instance found.");
+      }
+    } catch (e) {
+      console.log("[!] Error reading sandbox values: " + e.message);
+    }
+  };
+  const CmdActivityData = asm.image.class("MTTDProto.CmdActivityData").method("visit");
+  Interceptor.attach(CmdActivityData.virtualAddress, {
+    onEnter(args) {
+    }
+  });
 });
+
+// src/index.ts
+Il2Cpp.$config.moduleName = "liblogic.so";
