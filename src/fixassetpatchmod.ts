@@ -17,6 +17,21 @@ export function hookAssetPatchAndSandbox() {
       );
     }
 
+    // 1.1 Tambahan bypass melalui Field Flags untuk keamanan ekstra
+    const gameInitClass = AssemblyCSharp.tryClass("GameInit");
+    if (gameInitClass) {
+      const forceCheckOpt = gameInitClass.tryField("m_bEnableForceCheckOpt");
+      if (forceCheckOpt) forceCheckOpt.value = false;
+      console.log("[+] GameInit.m_bEnableForceCheckOpt diatur ke false.");
+    }
+
+    const inPackVerifyClass = AssemblyCSharp.tryClass("InPackFileVerify");
+    if (inPackVerifyClass) {
+      const bEnable = inPackVerifyClass.tryField("bEnable");
+      if (bEnable) bEnable.value = false;
+      console.log("[+] InPackFileVerify.bEnable diatur ke false.");
+    }
+
     // Daftar nama method yang kita temukan sebelumnya terkait keamanan dan sandbox
     const methodsToBypass = [
       "SelfMd5Verify",
@@ -29,12 +44,23 @@ export function hookAssetPatchAndSandbox() {
       "HttpsVerify",
       "ReportAssetBundleError",
       "IsTransferVerify",
-      // "CheckFileMd5_SubThread",
+      "CheckFileMd5_SubThread",
+      "FixErrorFiles_SubThread",
+      "get_IsResCheckOk",
+      "RunCheckMD5",
+      "StartCheckRes",
+      "CheckAndFixASTC_SubThread",
+      "checkMd5",
+      "CheckMd5Impl",
+      "CheckLegalLocalFile",
+      "ShouldSkipCheck",
       "SandBoxCheckSubThreadParseElement",
       "StartPathFixer",
       "StartPlayerPrefsFixer",
-      "get_bAstcInPack",
-      "IsCloseAstcInPackVar",
+      "IsCheckAvailable",
+      "VerifyIntegrity",
+      // "get_bAstcInPack", // Dihapus karena merusak kualitas grafik (Ultra -> High)
+      // "IsCloseAstcInPackVar",
     ];
 
     // 2. Loop semua class di dalam Assembly-CSharp untuk mencari method tersebut
